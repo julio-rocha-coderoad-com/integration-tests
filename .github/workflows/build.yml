@@ -29,3 +29,12 @@ jobs:
           repository: julio-rocha-coderoad-com/compose-project
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: List files in directory
+        run: ls -la
+
+      - name: Extract Zip File
+        run: unzip compose-data.zip
+
+      - name: Uncompress compose-data
+        run: tar -xvf compose-data.tar
+
