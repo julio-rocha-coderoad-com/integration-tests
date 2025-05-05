@@ -30,7 +30,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: List files in directory
-        run: ls -la
+        run: ls -R compose-data-backup
 
       - name: Extract Zip File
         run: unzip compose-data.zip
