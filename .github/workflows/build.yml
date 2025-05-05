@@ -27,7 +27,6 @@ jobs:
         with:
           run-id: 14847275364
           repository: julio-rocha-coderoad-com/compose-project
-          path: ./
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: List files in directory
@@ -36,7 +35,7 @@ jobs:
         run: pwd
 
       - name: Move tar file to main directory
-        run: compose-data-backup/compose-data.tar ../
+        run: compose-data-backup/compose-data.tar /home/runner/work/integration-tests/integration-tests
 
       - name: Uncompress compose-data
         run: tar -xvf compose-data.tar
