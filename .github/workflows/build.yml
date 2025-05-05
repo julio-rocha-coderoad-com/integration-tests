@@ -32,6 +32,8 @@ jobs:
 
       - name: List files in directory
         run: ls -R ./
+      - name: PWD
+        run: pwd
 
       - name: Move tar file to main directory
         run: compose-data-backup/compose-data.tar ../
