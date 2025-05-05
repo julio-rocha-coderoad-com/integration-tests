@@ -34,7 +34,7 @@ jobs:
         run: ls -R ./
 
       - name: Move tar file to main directory
-        run: compose-data-backup/compose-data.tar .
+        run: compose-data-backup/compose-data.tar ../
 
       - name: Uncompress compose-data
         run: tar -xvf compose-data.tar
