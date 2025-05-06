@@ -35,8 +35,6 @@ jobs:
 
       - name: Pulling Images
         run: docker compose pull
-      - name: start consul
-        run: docker compose up consul
       - name: Configuration Permissions
         run: chmod +x ./config-before-start.sh
       - name: Integration Environment Configuration

@@ -15,7 +15,7 @@ sudo chown -R 100:100 ./compose-data/consul
 
 echo 'Starting consul zookeeper mongo and kafka'
 docker compose up -d consul zookeeper  mongo  && sleep 10
-docker compose up -d kafka  && sleep 10
+docker compose up -d kafka  && sleep 40
 
 echo 'Staring keycloak and iam-config'
 docker compose up -d keycloak iam-config  && sleep 10
