@@ -26,16 +26,12 @@ echo 'Fix consul permissions'
 mkdir -p ./compose-data/consul
 sudo chown -R 100:100 ./compose-data/consul
 
-echo 'Starting consul zookeeper mongo and kafka'
-docker compose up -d consul zookeeper  mongo  && countdown 10 "Waiting for services to start"
+docker compose up -d consul zookeeper  mongo  && countdown 10 "Starting consul zookeeper mongo and kafka"
 docker compose up -d kafka  && countdown 40 "Waiting for kafka to start"
-
 docker compose up -d keycloak iam-config  && countdown 10 "Staring keycloak and iam-config"
-
 docker compose up -d services && countdown 180 "Starting Services & Migrating Data"
 echo 'Stopping services' && docker compose stop services
 
-echo 'Turn on ingestion applications'
 docker compose up -d iot-rest-connector rpin transformbridge ytem-transaction-tracker mongoinjector reportgenerator
 countdown 120 'Waiting for ingestion data consume'
 
