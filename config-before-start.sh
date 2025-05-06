@@ -9,6 +9,10 @@ export LOCAL_IP=$(ip addr show $netname  | awk '$1 == "inet" { print $2 }' | cut
 sed -i "/INTERNAL_IP/c INTERNAL_IP=$LOCAL_IP" .env
 sed -i "/KAFKA_ADDRESS/c KAFKA_ADDRESS=$LOCAL_IP" .env
 
+echo 'Fix consul permissions'
+mkdir -p ./compose-data/consul
+sudo chown -R 100:100 ./compose-data/consul
+
 echo 'Starting consul zookeeper mongo and kafka'
 docker compose up -d consul zookeeper  mongo  && sleep 10
 docker compose up -d kafka  && sleep 10
