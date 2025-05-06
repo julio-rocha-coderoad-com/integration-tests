@@ -1,0 +1,312 @@
+services:
+
+  consul:
+    hostname: consul
+    container_name: consul
+    image: ${CONSUL}
+    command: "agent -server -ui -node=server-1 -bootstrap-expect=1 -client=0.0.0.0"
+    ports:
+      - 8500:8500
+    volumes:
+      - ${VIZIX_DATA_PATH}/consul:/consul/data
+
+  mysql:
+    image: ${MYSQL}
+    ports:
+      - 3306:3306
+    restart: always
+    hostname: mysql
+    container_name: mysql
+    command:
+      - --innodb_adaptive_flushing=1
+      - --innodb_buffer_pool_instances=1
+      - --innodb_lock_wait_timeout=600
+      - --innodb_thread_sleep_delay=60000000
+      - --skip-name-resolve
+      - --thread_cache_size=16
+      - --tmp_table_size=32M
+      - --max_connections=7500
+      - --max_allowed_packet=10240M
+      - --lower_case_table_names=0
+      - --slow-query-log
+      - --interactive_timeout=3600
+      - --net_write_timeout=3600
+      - --net_read_timeout=3600
+      - --default-authentication-plugin=mysql_native_password
+
+    volumes:
+      - ${VIZIX_DATA_PATH}/mysql:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=${VIZIX_MYSQL_DATABASE}
+      - MYSQL_ROOT_PASSWORD=${VIZIX_MYSQL_PASSWORD}
+
+  mongo:
+    image: ${MONGO}
+    ports:
+      - 27017:27017
+    restart: always
+    hostname: mongo
+    container_name: mongo
+    command: --storageEngine=wiredTiger --journal --slowms=5 --profile=2 --cpu --dbpath=/data/db --directoryperdb --wiredTigerCacheSizeGB=1 --wiredTigerDirectoryForIndexes --auth
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${VIZIX_MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${VIZIX_MONGO_PASSWORD}
+    volumes:
+      - ${VIZIX_DATA_PATH}/mongo:/data/db
+
+  zookeeper:
+    image: ${ZOOKEEPER}
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - 2181:2181
+    volumes:
+      - ${VIZIX_DATA_PATH}/zookeeper/data:/data
+      - ${VIZIX_DATA_PATH}/zookeeper/datalog:/datalog
+
+  kafka:
+    image: ${KAFKA}
+    hostname: kafka
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - 9092:9092
+    environment:
+      KAFKA_PARAM_BROKER_ID: 1
+      KAFKA_PARAM_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_PARAM_LISTENERS: PLAINTEXT://:9092
+      KAFKA_PARAM_ADVERTISED_LISTENERS: PLAINTEXT://${KAFKA_ADDRESS}:9092
+      KAFKA_PARAM_ZOOKEEPER_CONNECT: ${KAFKA_ADDRESS}:2181
+      KAFKA_PARAM_DEFAULT_PARTITION_NUMBER: 4
+      KAFKA_PARAM_OFFSETS_RETENTION_MINUTES: 1008
+    volumes:
+      - ${VIZIX_DATA_PATH}/kafka:/data
+
+  services:
+    restart: always
+    depends_on:
+      - mongo
+      - mysql
+    hostname: services
+    container_name: services
+    mem_reservation: 4g
+    image: ${SERVICES}
+    environment:
+      MEM_XMS: 1g
+      MEM_XMX: 2g
+      VIZIX_MONGO_PRIMARY: mongo:27017
+      VIZIX_MONGO_DB: viz_root
+      VIZIX_MQTT_HOST: mosquitto
+      VIZIX_API_KEY: root
+      VIZIX_CONNECTION_URL: jdbc:mariadb://mysql:3306/riot_main?useSSL=false
+      VIZIX_DB_NAME: riot_main
+      VIZIX_DB_USER: root
+      VIZIX_DB_PASSWORD: control123!
+      VIZIX_DB_DRIVER: org.mariadb.jdbc.Driver
+      VIZIX_DB_DIALECT: org.hibernate.dialect.MariaDBDialect
+      VIZIX_DB_SCHEMA: riot_main
+      VIZIX_HAZELCAST_DISTRIBUTED_ENABLE: "false"
+      VIZIX_HAZELCAST_NATIVE_CLIENT_ADDRESS: hazelcast
+      VIZIX_AUTHENTICATION_MODE: nativeAuthentication
+      VIZIX_KAFKA_ENABLED: "true"
+      VIZIX_KAFKA_ZOOKEEPER: ${KAFKA_ADDRESS}:2181
+      VIZIX_KAFKA_SERVERS: ${KAFKA_ADDRESS}:9092
+      VIZIX_SERVICES_URL: ${KAFKA_ADDRESS}:80
+      VIZIX_SERVICES_CONTEXT_PATH: '/riot-core-services'
+      VIZIX_SERVICES_SECURE: "false"
+      VIZIX_HOME_SERVICES: "/jar"
+      VIZIX_ENABLE_JOBS: "true"
+      VIZIX_VERSIONING_HANDLER: versioning
+      VIZIX_THING_SYNC_URL: iot-rest-connector:8080/iot-rest-connector
+      VIZIX_THING_SYNC_TIMEOUT: 34
+      VIZIX_REPORT_URL: reports:8080/riot-core-reports/api
+      VIZIX_REPORT_TIMEOUT: 1200
+      #iam
+      VIZIX_IAM_CONFIGURATION_URL: iam-config:8080/iam-config
+      VIZIX_IAM_CONFIGURATION_TIMEOUT: 10
+      VIZIX_IAM_JWT_PUBLIC_KEY_URL: http://iam-config:8080/iam-config/config/auth/keys
+      VIZIX_IAM_JWT_ISSUER: none
+
+  services-old:
+    restart: always
+    depends_on:
+      - mongo
+      - mysql
+    hostname: services-old
+    container_name: services-old
+    mem_reservation: 4g
+    image: ${SERVICES}
+    environment:
+      MEM_XMS: 1g
+      MEM_XMX: 2g
+      VIZIX_MONGO_PRIMARY: mongo:27017
+      VIZIX_MONGO_DB: viz_root
+      VIZIX_MQTT_HOST: mosquitto
+      VIZIX_API_KEY: root
+      VIZIX_CONNECTION_URL: jdbc:mysql://mysql:3306/riot_main?useSSL=false
+      VIZIX_DB_NAME: riot_main
+      VIZIX_DB_USER: root
+      VIZIX_DB_PASSWORD: control123!
+      VIZIX_DB_DRIVER: com.mysql.jdbc.Driver
+      VIZIX_DB_DIALECT: org.hibernate.dialect.MySQLDialect
+      VIZIX_DB_SCHEMA: riot_main
+      VIZIX_HAZELCAST_DISTRIBUTED_ENABLE: "false"
+      VIZIX_HAZELCAST_NATIVE_CLIENT_ADDRESS: hazelcast
+      VIZIX_AUTHENTICATION_MODE: nativeAuthentication
+      VIZIX_KAFKA_ENABLED: "true"
+      VIZIX_KAFKA_ZOOKEEPER: ${KAFKA_ADDRESS}:2181
+      VIZIX_KAFKA_SERVERS: ${KAFKA_ADDRESS}:9092
+      VIZIX_SERVICES_URL: ${KAFKA_ADDRESS}:80
+      VIZIX_SERVICES_CONTEXT_PATH: '/riot-core-services'
+      VIZIX_SERVICES_SECURE: "false"
+      VIZIX_HOME_SERVICES: "/jar"
+      VIZIX_ENABLE_JOBS: "true"
+      VIZIX_VERSIONING_HANDLER: versioning
+      VIZIX_THING_SYNC_URL: iot-rest-connector:8080/iot-rest-connector
+      VIZIX_THING_SYNC_TIMEOUT: 34
+      VIZIX_REPORT_URL: reports:8080/riot-core-reports/api
+      VIZIX_REPORT_TIMEOUT: 1200
+      #iam
+      VIZIX_IAM_CONFIGURATION_URL: iam-config:8080/iam-config
+      VIZIX_IAM_CONFIGURATION_TIMEOUT: 10
+      VIZIX_IAM_JWT_PUBLIC_KEY_URL: http://iam-config:8080/iam-config/config/auth/keys
+      VIZIX_IAM_JWT_ISSUER: none
+
+  iam-config:
+    image: ${IAM_CONFIG}
+    hostname: iam-config
+    container_name: iam-config
+    depends_on:
+      - keycloak
+      - consul
+    environment:
+      - QUARKUS_DATASOURCE_DB-KIND=mysql
+      - QUARKUS_DATASOURCE_USERNAME=root
+      - QUARKUS_DATASOURCE_PASSWORD=control123!
+      - QUARKUS_DATASOURCE_JDBC_URL=jdbc:mysql://mysql:3306/riot_main?useSSL=false
+      - QUARKUS_DATASOURCE_JDBC_BACKGROUND-VALIDATION-INTERVAL=30S
+      - QUARKUS_CONSUL_CONFIG_AGENT_HOST_PORT=consul:8500
+      - QUARKUS_CONSUL_CONFIG_FAIL_ON_MISSING_KEY=true
+      - QUARKUS_CONSUL_CONFIG_ENABLED=true
+      - KEYCLOAK_URL=http://keycloak:8080
+      - KEYCLOAK_ADMIN_USERNAME=admin
+      - KEYCLOAK_ADMIN_PASSWORD=Control123!
+      - USER_CONVENTIONAL_PASSWORD=true
+    ports:
+      - "8580:8080"
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:12.0.2
+    hostname: keycloak
+    container_name: keycloak
+    depends_on:
+      - mysql
+    command: -Dkeycloak.profile.feature.upload_scripts=enabled -Dkeycloak.profile.feature.token_exchange=enabled -Dkeycloak.profile=preview
+    environment:
+      - KEYCLOAK_USER=admin
+      - KEYCLOAK_PASSWORD=Control123!
+      - DB_VENDOR=mysql
+      - DB_ADDR=mysql
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASSWORD=control123!
+      - PROXY_ADDRESS_FORWARDING=true
+    ports:
+      - "8680:8080"
+
+  iot-rest-connector:
+    hostname: iot-rest-connector
+    container_name: iot-rest-connector
+    depends_on:
+      - consul
+      - mongo
+      - kafka
+      - mysql
+    image: ${IOT_REST_CONNECTOR}
+    environment:
+      - QUARKUS_CONSUL_CONFIG_AGENT_HOST_PORT=consul:8500
+      - QUARKUS_LOG_LEVEL=INFO
+    ports:
+      - "8181:8080"
+
+# INGESTION
+  # Rules Processor Ingestion
+  rpin:
+    image: ${BRIDGES}
+    hostname: rpin
+    container_name: rpin
+    environment:
+      VIZIX_BRIDGE_TYPE: rulesprocessor
+      VIZIX_KAFKA_CODE: RULESPROCESSOR
+      VIZIX_KAFKA_SERVERS: ${KAFKA_ADDRESS}:9092
+      VIZIX_KAFKA_CACHE_TICKLE_MODE: "MONGO_INJECTOR"
+      VIZIX_KAFKA_PROCESSING_MODE: "DEFAULT"
+      VIZIX_ESPER: 'yes'
+      VIZIX_MAX_ERRORS_ON_RULE_THRESHOLD: 0
+      RUN_AUTOMATION_WITH_KAFKA_SERVERS: ${INTERNAL_IP}:9092
+    ports:
+      - "8001:8000"
+
+  transformbridge:
+    hostname: transformbridge
+    container_name: transformbridge
+    image: ${BRIDGES}
+    depends_on:
+      - kafka
+    environment:
+      VIZIX_BRIDGE_TYPE: transformbridge
+      VIZIX_KAFKA_SERVERS: ${KAFKA_ADDRESS}:9092
+      VIZIX_FIX_VIZIX_EVENT_ENABLE: "true"
+      VIZIX_TRANSFORM_BRIDGE_SCRIPTS_DIRECTORY: /var/vizix/transform
+      CONSUL_HTTP_ADDR: consul:8500
+      CONSUL_PREFIX: dev
+    volumes:
+      - ${VIZIX_DATA_PATH}/transformbridge-data:/var/vizix
+
+  ytem-transaction-tracker:
+    hostname: ytem-transaction-tracker
+    container_name: ytem-transaction-tracker
+    depends_on:
+      - consul
+      - kafka
+    image: ${TRANSACTION_TRACKER}
+    environment:
+      CONSUL_HTTP_ADDR: consul:8500
+      CONSUL_PREFIX: dev
+
+  mongoinjector:
+    hostname: mongoinjector
+    container_name: mongoinjector
+    image: ${BRIDGES}
+    depends_on:
+      - mongo
+      - kafka
+    environment:
+      - VIZIX_CORE_CODE=MONGOINJECTOR
+      - VIZIX_BRIDGE_TYPE=mongoingestor
+      - RUN_AUTOMATION_WITH_KAFKA_SERVERS=${KAFKA_ADDRESS}:9092
+      - RUN_AUTOMATION_WITH_MONGO_URI=mongodb://${VIZIX_MONGO_USERNAME}:${VIZIX_MONGO_PASSWORD}@mongo:27017/viz_root?ssl=false&authSource=admin
+    volumes:
+      - ${VIZIX_DATA_PATH}/mongoinjector-data:/var/vizix/mongoIngestor
+
+  reportgenerator:
+    hostname: reportgenerator
+    container_name: reportgenerator
+    image: ${REPORTGENERATOR}
+    environment:
+      VIZIX_BRIDGE_TYPE: reportgenerator
+      MEM_XMX: 512M
+      MEM_XMS: 512M
+      VIZIX_REPORT_GENERATOR_MONGO_ANALYTICS_ENABLE: "false"
+      VIZIX_ANALYTICS_MONGO_PRIMARY: "mongo:27017"
+      VIZIX_ANALYTICS_MONGO_USERNAME: "${VIZIX_MONGO_USERNAME}"
+      VIZIX_ANALYTICS_MONGO_PASSWORD: "${VIZIX_MONGO_PASSWORD}"
+      VIZIX_ANALYTICS_MONGO_AUTHDB: "admin"
+      VIZIX_ANALYTICS_MONGO_DB: "analytics"
+      FEATURE_FLAG_PRODUCT_MERGE_ENABLED: "false"
+      VIZIX_KAFKA_SERVERS: ${KAFKA_ADDRESS}:9092
+      RUN_AUTOMATION_WITH_KAFKA_SERVERS: ${KAFKA_ADDRESS}:9092
+      VIZIX_PUBLISH_KAFKA_ENABLED: "true"
+      VIZIX_LOG_LEVEL: INFO
+
