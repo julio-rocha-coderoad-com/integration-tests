@@ -33,6 +33,8 @@ jobs:
       - name: Uncompress compose-data
         run: tar -xvf compose-data-backup/compose-data.tar
 
+      - name: Pulling Images
+        run: docker compose pull
       - name: Configuration Permissions
         run: chmod +x ./config-before-start.sh
       - name: Integration Environment Configuration
