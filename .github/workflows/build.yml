@@ -35,18 +35,29 @@ jobs:
 
       - name: Setup Images version
         run: |
+          ENV_NAME="dev" # Default
           if ${{ github.ref_type == 'tag' }}; then
-            echo 'Loading tag configuration' 
-            export $(cat environment/tag-environment | xargs )
+            ENV_NAME="tag"
           elif ${{ startsWith(github.ref, 'refs/heads/canary/') }}; then
-            echo 'Loading canary configuration'
-            export $(cat environment/canary-environment | xargs )
-          else
-            echo 'Loading dev configuration'
-            export $(cat environment/dev-environment | xargs )
+            ENV_NAME="canary"
           fi
+          
+          echo "Detected environment: $ENV_NAME"          
+          # Load the specific environment file
+          CONFIG_FILE="environment/${ENV_NAME}-environment"
+          echo "Loading configuration from $CONFIG_FILE"
+          
+          # Add variables to the environment
+          set -a
+          source $CONFIG_FILE
+          set +a
+          cat $CONFIG_FILE >> $GITHUB_ENV
+
       - name: Pulling Images
         run: docker compose pull
+      - name: Show pulled images
+        run: docker images
+
       - name: Configuration Permissions
         run: chmod +x ./config-before-start.sh
       - name: Integration Environment Configuration
