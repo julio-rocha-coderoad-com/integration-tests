@@ -38,7 +38,7 @@ jobs:
           if ${{ github.ref_type == 'tag' }}; then
             echo 'Loading tag configuration' 
             export $(cat environment/tag-environment | xargs )
-          else if ${{ contains(github.base_ref, 'canary/') }}; then
+          elif ${{ contains(github.base_ref, 'canary/') }}; then
             echo 'Loading canary configuration'
             export $(cat environment/canary-environment | xargs )
           else
