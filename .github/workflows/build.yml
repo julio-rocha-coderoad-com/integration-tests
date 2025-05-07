@@ -33,6 +33,18 @@ jobs:
       - name: Uncompress compose-data
         run: tar -xvf compose-data-backup/compose-data.tar
 
+      - name: Setup Images version
+        run: |
+          if ${{ github.ref_type == 'tag' }}; then
+            echo 'Loading tag configuration' 
+            export $(cat environment/tag-environment | xargs )
+          else if ${{ contains(github.base_ref, 'canary/') }}; then
+            echo 'Loading canary configuration'
+            export $(cat environment/canary-environment | xargs )
+          else
+            echo 'Loading dev configuration'
+            export $(cat environment/dev-environment | xargs )
+          fi
       - name: Pulling Images
         run: docker compose pull
       - name: Configuration Permissions
