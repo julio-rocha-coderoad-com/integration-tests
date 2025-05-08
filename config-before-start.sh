@@ -50,7 +50,7 @@ docker compose up -d mongoinjector reportgenerator
 docker compose up -d sysconfig-web
 docker compose stop services
 docker compose stop keycloak iam-config # we can do this later
-countdown 60 'Waiting for ingestion data consume'
+####countdown 60 'Waiting for ingestion data consume'
 
 docker compose up -d minio
 docker compose up -d ytem-locations ytem-site-provisioner && countdown 60 "Waiting for ytem-locations sysconfig-web ytem-site-provisioner"
@@ -129,7 +129,7 @@ while [ $attempt -le $max_attempts ]; do
   fi
 
   attempt=$((attempt+1))
-  sudo tail -n 10 -f ./compose-data/sysconfig-web/tmp/output_SYSCONFIG_PERN* || echo "No logs detected after 60 seconds timeout"
+  sudo tail -n 10 ./compose-data/sysconfig-web/tmp/output_SYSCONFIG_PERN* || echo "No logs detected after 60 seconds timeout"
 done
 
 echo "Polling finished."
