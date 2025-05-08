@@ -63,6 +63,20 @@ echo 'Monitoring sysconfig-web logs...'
 timeout -k 5 60 docker compose exec -T sysconfig-web tail -n 200 -f /tmp/* || echo "No logs detected after 60 seconds timeout"
 timeout -k 5 60 docker compose exec -T sysconfig-web tail -n 200 -f /tmp/output_SYSCONFIG_PERN* || echo "No logs detected after 60 seconds timeout"
 
+echo 'Checking for sysconfig logs with retrying...'
+start_time=$(date +%s)
+end_time=$((start_time + 60))
+while [ $(date +%s) -lt $end_time ]; do
+    if [ -n "$(docker compose exec -T sysconfig-web find /tmp -name 'output_SYSCONFIG_PERN*' 2>/dev/null)" ]; then
+        docker compose exec -T sysconfig-web tail -n 200 -f /tmp/output_SYSCONFIG_PERN*
+        break
+    else
+        echo "Logs not found yet, retrying in 5 seconds..."
+        sleep 5
+    fi
+done
+[ $(date +%s) -ge $end_time ] && echo "No logs with prefix output_SYSCONFIG_PERN found after 1 minute"
+
 countdown 120 'Waiting Complementary task in tenant creation'
 
 docker compose logs
