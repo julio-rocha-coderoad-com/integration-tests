@@ -47,9 +47,10 @@ docker compose exec -T consul /bin/consul kv import @consul_config.json
 docker compose up -d iot-rest-connector rpin
 docker compose up -d transformbridge ytem-transaction-tracker
 docker compose up -d mongoinjector reportgenerator
-countdown 120 'Waiting for ingestion data consume'
+docker compose up -d sysconfig-web
+countdown 60 'Waiting for ingestion data consume'
 
-docker compose up -d minio sysconfig-web
+docker compose up -d minio
 docker compose up -d ytem-locations ytem-site-provisioner && countdown 60 "Waiting for ytem-locations sysconfig-web ytem-site-provisioner"
 
 echo 'Import tenant data to mongo'
@@ -59,7 +60,8 @@ import_mongo_file "creation_PERN.json" "tenant_creation_request"
 
 countdown 30 'Waiting for tenant creation initialization'
 echo 'Monitoring sysconfig-web logs...'
-timeout -k 5 60 docker compose exec -T sysconfig-web tail -200f /tmp/output_SYSCONFIG_PERN_* || echo "No logs detected after 60 seconds timeout"
+timeout -k 5 60 docker compose exec -T sysconfig-web tail -200f /tmp/* || echo "No logs detected after 60 seconds timeout"
+timeout -k 5 60 docker compose exec -T sysconfig-web tail -200f /tmp/output_SYSCONFIG_PERN* || echo "No logs detected after 60 seconds timeout"
 
 countdown 120 'Waiting Complementary task in tenant creation'
 
