@@ -60,24 +60,26 @@ import_mongo_file "creation_PERN.json" "tenant_creation_request"
 
 countdown 30 'Waiting for tenant creation initialization'
 echo 'Monitoring sysconfig-web logs...'
-timeout -k 5 60 docker compose exec -T sysconfig-web tail -n 200 -f /tmp/* || echo "No logs detected after 60 seconds timeout"
-timeout -k 5 60 docker compose exec -T sysconfig-web tail -n 200 -f /tmp/output_SYSCONFIG_PERN* || echo "No logs detected after 60 seconds timeout"
-
-echo 'Checking for sysconfig logs with retrying...'
-start_time=$(date +%s)
-end_time=$((start_time + 60))
-while [ $(date +%s) -lt $end_time ]; do
-    if [ -n "$(docker compose exec -T sysconfig-web find /tmp -name 'output_SYSCONFIG_PERN*' 2>/dev/null)" ]; then
-        docker compose exec -T sysconfig-web tail -n 200 -f /tmp/output_SYSCONFIG_PERN*
-        break
-    else
-        echo "Logs not found yet, retrying in 5 seconds..."
-        sleep 5
-    fi
-done
-[ $(date +%s) -ge $end_time ] && echo "No logs with prefix output_SYSCONFIG_PERN found after 1 minute"
+countdown 5 'Additional wait global attempt'
+timeout -k 5 60 tail -n 200 -f ./compose-data/sysconfig-web/tmp/* || echo "No logs detected after 60 seconds timeout"
+countdown 5 'Additional wait single attempt'
+timeout -k 5 60 tail -n 200 -f ./compose-data/sysconfig-web/tmp/output_SYSCONFIG_PERN* || echo "No logs detected after 60 seconds timeout"
 
 countdown 120 'Waiting Complementary task in tenant creation'
 
+ls ./compose-data/sysconfig-web/tmp/
+curl --location 'http://localhost:8480/statemachine-api-configuration/rest/configuration/locations/transactions/681a275e50fa74419a765cdf' \
+--header 'Content-Type: application/json' \
+--header 'apikey: 7B4BCCDC' \
+--header 'tenant: root' \
+--header 'accept-version: v2'
+
 docker compose logs
 echo 'Environment is ready, you can turn on the applications'
+
+echo 'Creating MySQL database backup...'
+backup_file="mysql_backup.sql"
+docker compose exec -T mysql sh -c 'exec mysqldump --all-databases -u root -pcontrol123!' > "$backup_file"
+echo "MySQL backup completed: $backup_file"
+tar -cvf "$backup_file.tar" "$backup_file"
+

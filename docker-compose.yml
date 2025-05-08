@@ -319,6 +319,8 @@ services:
       VIZIX_HAZELCAST_NATIVE_CLIENT_ADDRESS: "hazelcast"
       VIZIX_IAM_CONFIGURATION_URL: "http://iam-config:8080/iam-config"
       VIZIX_IAM_CONFIGURATION_TIMEOUT: 60
+    volumes:
+      - ${VIZIX_DATA_PATH}/sysconfig-web/tmp:/tmp
 
   ytem-locations:
     hostname: ytem-locations
