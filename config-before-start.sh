@@ -65,10 +65,10 @@ echo 'Monitoring sysconfig-web logs...'
 countdown 5 'Additional wait single attempt'
 timeout -k 5 120 sudo tail -n 200 -f ./compose-data/sysconfig-web/tmp/output_SYSCONFIG_PERN* || echo "No logs detected after 60 seconds timeout"
 
-countdown 120 'Waiting Complementary task in tenant creation'
-
 # starting services to install license
 docker compose up -d services
+
+countdown 120 'Waiting Complementary task in tenant creation'
 
 
 curl --location 'http://localhost:8480/statemachine-api-configuration/rest/configuration/locations/transactions/681a275e50fa74419a765cdf' \
