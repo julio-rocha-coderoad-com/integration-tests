@@ -265,3 +265,102 @@ services:
       VIZIX_PUBLISH_KAFKA_ENABLED: "true"
       VIZIX_LOG_LEVEL: INFO
 
+# Tenant Creation
+  sysconfig-web:
+    hostname: sysconfig-web
+    container_name: sysconfig-web
+    mem_reservation: 2g
+    image: ${SYSCONFIG_WEB}
+    environment:
+      VIZIX_PRE_MIGRATION: "false"
+      VIZIX_SYSCONFIG: "true"
+      VIZIX_SYSCONFIG_CREATE_TENANT: "true"
+      VIZIX_SYSCONFIG_CLEAN: "false"
+      VIZIX_KAFKA_CREATE_TOPICS: "true"
+      VIZIX_KAFKA_LOAD_CACHE: "true"
+      VIZIX_KAFKA_LOAD_CACHE_GROUP_FQN: "/"
+      VIZIX_KAFKA_DATA_REPLICA_FACTOR: "1"
+      VIZIX_KAFKA_DATA_PARTITIONS: "8"
+      VIZIX_KAFKA_DATA_REAL_TIME_PARTITIONS: "1"
+      VIZIX_KAFKA_DATA_RETENTION_UPDATER: "false"
+      VIZIX_KAFKA_DATA_RETENTION_HOURS: "2"
+      VIZIX_KAFKA_DATA_RETENTION_BYTES: "-1"
+      VIZIX_KAFKA_ENABLED: "true"
+      VIZIX_KAFKA_ZOOKEEPER: ${KAFKA_ADDRESS}:2181
+      VIZIX_KAFKA_SERVERS: ${KAFKA_ADDRESS}:9092
+      VIZIX_REPORTGENERATOR_RUN_MIGRATION: "false"
+      VIZIX_REPORTGENERATOR_RUN_ALL: "false"
+      VIZIX_REPORTGENERATOR_RUN_CATEGORYCUBE: "false"
+      VIZIX_REPORTGENERATOR_RUN_EVENTCUBE: "false"
+      VIZIX_REPORTGENERATOR_RUN_FIXTURECUBE: "false"
+      VIZIX_REPORTGENERATOR_RUN_LOCATIONCUBE: "false"
+      VIZIX_REPORTGENERATOR_RUN_PRODUCTCUBE: "false"
+      VIZIX_REPORTGENERATOR_RUN_REFERENCELISTCUBE: "false"
+      VIZIX_REPORTGENERATOR_RUN_STATUSCUBE: "false"
+      VIZIX_SITE_CONFIG: "true"
+      VIZIX_MONGO_PRIMARY: "mongo:27017"
+      VIZIX_MONGO_DB: "viz_root"
+      VIZIX_MONGO_USERNAME: "${VIZIX_MONGO_USERNAME}"
+      VIZIX_MONGO_PASSWORD: "${VIZIX_MONGO_PASSWORD}"
+      VIZIX_MQTT_HOST: "mqtt"
+      VIZIX_DB_DRIVER: "org.mariadb.jdbc.Driver"
+      VIZIX_DB_DIALECT: "org.hibernate.dialect.MariaDBDialect"
+      VIZIX_DB_DATABASE: "${VIZIX_MYSQL_DATABASE}"
+      VIZIX_DB_PASSWORD: "${VIZIX_MYSQL_PASSWORD}"
+      VIZIX_CONNECTION_URL: "jdbc:mariadb://mysql:3306/riot_main?useSSL=false"
+      VIZIX_POOL_MINIMUM_IDLE: "5"
+      VIZIX_POOL_MAXIMUM_POOL_SIZE: "12"
+      SYSCONFIG_WEB_CALLER: "true"
+      VIZIX_API_PORT: "8080"
+      VIZIX_API_HOST: "services"
+      VIZIX_API_KEY: "7B4BCCDC"
+      VIZIX_API_PATH: "/riot-core-services"
+      VIZIX_HAZELCAST_DISTRIBUTED_ENABLE: "false"
+      VIZIX_HAZELCAST_NATIVE_CLIENT_ADDRESS: "hazelcast"
+      VIZIX_IAM_CONFIGURATION_URL: "http://iam-config:8080/iam-config"
+      VIZIX_IAM_CONFIGURATION_TIMEOUT: 60
+
+  ytem-locations:
+    hostname: ytem-locations
+    container_name: ytem-locations
+    image: ${YTEM_LOCATIONS}
+    restart: always
+    mem_reservation: 256m
+    mem_limit: 512m
+    depends_on:
+      - consul
+    environment:
+      - QUARKUS_CONSUL_CONFIG_AGENT_HOST_PORT=consul:8500
+      - QUARKUS_LOG_LEVEL=INFO
+    ports:
+      - 8480:8080
+
+  ytem-site-provisioner:
+    hostname: ytem-site-provisioner
+    container_name: ytem-site-provisioner
+    image: ${YTEM_SITE_PROVISIONER}
+    restart: always
+    mem_reservation: 256m
+    mem_limit: 512m
+    depends_on:
+      - consul
+    environment:
+      - QUARKUS_CONSUL_CONFIG_AGENT_HOST_PORT=consul:8500
+      - QUARKUS_LOG_LEVEL=INFO
+    ports:
+      - 8380:8080
+
+  minio:
+    image: ${MINIO}
+    hostname: minio
+    container_name: minio
+    command: server /data
+    mem_reservation: 512m
+    mem_limit: 512m
+    environment:
+      MINIO_ACCESS_KEY: "minio"
+      MINIO_SECRET_KEY: "control123!"
+    volumes:
+      - ${VIZIX_DATA_PATH}/minio:/data
+    ports:
+      - "9500:9000"

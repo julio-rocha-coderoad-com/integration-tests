@@ -20,6 +20,15 @@ countdown() {
     done
     echo -e "\r$message: Complete!            "
 }
+# Function to copy and import JSON files to MongoDB
+import_mongo_file() {
+    local file=$1
+    local collection=$2
+    echo "Importing $file into $collection collection..."
+    docker cp tenant/$file mongo:/tmp/$file
+    docker compose exec -T mongo mongoimport --uri "mongodb://admin:control123!@localhost:27017/viz_root?authSource=admin" \
+        --collection $collection --file /tmp/$file --mode upsert
+}
 
 
 echo 'Fix consul permissions'
@@ -32,8 +41,25 @@ docker compose up -d keycloak iam-config  && countdown 10 "Staring keycloak and 
 docker compose up -d services && countdown 180 "Starting Services & Migrating Data"
 echo 'Stopping services' && docker compose stop services
 
+echo 'Import Consul Configuration File for Project Under Test'
+docker cp consul_config.json consul:/consul_config.json
+docker compose exec -T consul /bin/consul kv import @consul_config.json
+
 docker compose up -d iot-rest-connector rpin transformbridge ytem-transaction-tracker mongoinjector reportgenerator
 countdown 120 'Waiting for ingestion data consume'
+
+docker compose up -d minio
+docker compose up -d ytem-locations sysconfig-web ytem-site-provisioner && countdown 60 "Waiting for ytem-locations sysconfig-web ytem-site-provisioner"
+
+echo 'Import tenant data to mongo'
+import_mongo_file "creation_PERN.json" "tenant_creation_request"
+import_mongo_file "transactions_PERN.json" "transactions"
+import_mongo_file "transactions_detail_PERN.json" "transactiondetail"
+
+echo 'Monitoring sysconfig-web logs...'
+timeout -k 5 60 docker compose exec -T sysconfig-web tail -f /tmp/output_SYSCONFIG_PERN_* || echo "No logs detected after 60 seconds timeout"
+
+countdown 120 'Waiting Complementary task in tenant creation'
 
 docker compose logs
 echo 'Environment is ready, you can turn on the applications'

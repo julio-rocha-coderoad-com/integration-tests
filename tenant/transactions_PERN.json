@@ -1,0 +1,33 @@
+{
+  "_id": {
+    "$oid": "681a275e50fa74419a765cdf"
+  },
+  "tenant": "root",
+  "correlationId": "3cb616be-674c-490b-89ab-6c6bc0ae32de",
+  "source": "YTEM-TENANT-PROVISIONER",
+  "status": "PENDING",
+  "createdAt": {
+    "$numberLong": "1746544478235"
+  },
+  "createdAtString": "2025-05-06T15:14:38.235+0000",
+  "updatedAt": {
+    "$numberLong": "1746545713260"
+  },
+  "updatedAtString": "2025-05-06T15:35:13.260+0000",
+  "isActive": true,
+  "createdBy": "sysconfigAdmin",
+  "message": null,
+  "customData": {
+    "totalRecords": "1",
+    "code": "PERN",
+    "tenantName": "aztdemo",
+    "defaultSite_transactionId": "681a275e50fa74419a765cdf",
+    "remainingRecords": "0",
+    "successRecords": "1",
+    "tenantCode": "PERN",
+    "errorRecords": "0"
+  },
+  "shardId": {
+    "$numberLong": "1"
+  }
+}

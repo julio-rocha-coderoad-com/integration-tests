@@ -1,0 +1,11 @@
+{
+  "_id": {
+    "$oid": "681a275e50fa74419a765cdf"
+  },
+  "tenantCode": "PERN",
+  "tenantName": "Tenant Test PERN",
+  "saveTime": {
+    "$numberLong": "1746544478339"
+  },
+  "status": "PENDING"
+}

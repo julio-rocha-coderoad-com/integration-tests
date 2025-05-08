@@ -1,0 +1,31 @@
+{
+  "_id": {
+    "$oid": "681a275e50fa74419a765ce0"
+  },
+  "transactionId": "681a275e50fa74419a765cdf",
+  "errorLine": null,
+  "errorCode": null,
+  "errorMessage": null,
+  "status": "PENDING",
+  "customData": {
+    "totalRecords": "1",
+    "code": "PERN",
+    "tenantName": "aztdemo",
+    "remainingRecords": "0",
+    "successRecords": "1",
+    "tenantCode": "PERN",
+    "errorRecords": "0"
+  },
+  "createdAt": {
+    "$numberLong": "1746544478256"
+  },
+  "createdAtString": "2025-05-06T15:14:38.256+0000",
+  "createdBy": "sysconfigAdmin",
+  "updatedAt": {
+    "$numberLong": "1746545713269"
+  },
+  "updatedAtString": "2025-05-06T15:35:13.269+0000",
+  "shardId": {
+    "$numberLong": "1"
+  }
+}
