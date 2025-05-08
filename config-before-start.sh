@@ -78,10 +78,11 @@ curl --location 'http://localhost:8480/statemachine-api-configuration/rest/confi
 echo "Polling for transaction status (waiting for SUCCESS or ERROR)..."
 max_attempts=30
 attempt=1
-status="PENDING"
-status_code=200
+# Initialize status to something other than the final states
+transaction_status="UNKNOWN" # Use a different variable name to avoid confusion with loop variable 'status'
+status_code=0 # Initialize status_code
 
-while [ $attempt -le $max_attempts ] && [ "$status" != "SUCCESS" ] && [ "$status" != "ERROR" ] && [ $status_code -eq 200 ]; do
+while [ $attempt -le $max_attempts ]; do
   echo "Attempt $attempt of $max_attempts..."
 
   # Execute curl with silent mode and capture status code
@@ -97,29 +98,59 @@ while [ $attempt -le $max_attempts ] && [ "$status" != "SUCCESS" ] && [ "$status
   # Extract the response body (everything except the last line)
   body=$(echo "$response" | sed '$d')
 
-  # Check if response contains SUCCESS or ERROR
-  if echo "$body" | grep -q -i "SUCCESS"; then
-    status="SUCCESS"
+  parsed_status=$(echo "$body" | jq -r '.status')
+  jq_exit_status=$?
+
+  # Check for HTTP errors first
+  if [ "$status_code" -ne 200 ]; then
+    echo "ERROR: Received non-200 status code: $status_code" >&2 # Output error to stderr
+    echo "Response Body: $body" >&2
+    transaction_status="HTTP_ERROR" # Set status to indicate failure
+    break # Exit loop on HTTP error
+  elif [ $jq_exit_status -ne 0 ]; then
+      echo "ERROR: Failed to parse JSON body or find .status key with jq." >&2
+      echo "Response Body: $body" >&2
+      transaction_status="PARSE_ERROR" # Set status to indicate failure
+      break # Exit loop on parsing error
+  fi
+
+  # Now check the reliably parsed status
+  if [ "$parsed_status" = "SUCCESS" ]; then
+    transaction_status="SUCCESS"
     echo "Status is now SUCCESS!"
-    echo "$body"
-  elif echo "$body" | grep -q -i "ERROR"; then
-    status="ERROR"
+    echo "$body" # Optional: print the final success body
+    break # Exit loop on success
+  elif [ "$parsed_status" = "ERROR" ]; then
+    transaction_status="ERROR"
     echo "Status is now ERROR!"
-    echo "$body"
+    echo "$body" # Optional: print the error body
+    break # Exit loop on reported error status
   else
-    if [ "$status_code" -ne 200 ]; then
-      echo "Received non-200 status code: $status_code"
-      break
-    fi
-    echo "Status still PENDING. Waiting before next attempt..."
+    # Status is something else (like IN_PROGRESS, PENDING, etc.)
+    echo "Status: $parsed_status. Waiting before next attempt..."
     sleep 5
   fi
 
   attempt=$((attempt+1))
 done
 
-if [ "$status" = "PENDING" ] && [ $attempt -gt $max_attempts ]; then
-  echo "Maximum polling attempts reached. Last status: PENDING"
+echo "Polling finished."
+
+if [ "$transaction_status" = "SUCCESS" ]; then
+  echo "Transaction completed successfully."
+elif [ "$transaction_status" = "ERROR" ]; then
+  echo "Transaction reported an ERROR status."
+elif [ "$transaction_status" = "HTTP_ERROR" ]; then
+  echo "Polling failed due to an HTTP error ($status_code)."
+elif [ "$transaction_status" = "PARSE_ERROR" ]; then
+  echo "Polling failed due to a JSON parsing error."
+elif [ $attempt -gt $max_attempts ]; then
+   # This case is technically covered by the loop condition and the checks inside,
+   # but as a fallback check: if loop exited because attempts ran out
+  echo "Maximum polling attempts reached ($max_attempts). Transaction did not reach SUCCESS or ERROR state."
+else
+  # Should not happen if logic is sound, but good for debugging
+  echo "Polling loop exited unexpectedly. Final status: $transaction_status"
 fi
 ### wait for sysconfig-web to finish
 
