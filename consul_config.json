@@ -8,5 +8,75 @@
     "key": "dev/ytem/locations.properties",
     "flags": 0,
     "value": "bWF4LnJlY29yZC5zaXplPTEwMDAKdml6aXgubWluaW8uaW1hZ2UudXJsPWh0dHA6Ly9taW5pbzo5MDAwCnF1YXJrdXMubWluaW8udXJsPWh0dHA6Ly9taW5pbzo5MDAwCnF1YXJrdXMubWluaW8uYWNjZXNzLWtleT1taW5pbwpxdWFya3VzLm1pbmlvLnNlY3JldC1rZXk9Y29udHJvbDEyMyEKcm9vdC5hcGlrZXk9N0I0QkNDREM="
+  },
+  {
+    "key": "dev/core/kafka/topics/store/___cache___bizstep.json",
+    "flags": 0,
+    "value": "e30="
+  },
+  {
+    "key": "dev/core/kafka/topics/store/___cache___disposition.json",
+    "flags": 0,
+    "value": "e30="
+  },
+  {
+    "key": "dev/core/kafka/topics/data/___v1___errors___viewGenerator___topicNameExtractor.json",
+    "flags": 0,
+    "value": "e30="
+  },
+  {
+    "key": "dev/core/kafka/topics/data/___v1___data2___1.json",
+    "flags": 0,
+    "value": "e30="
+  },
+  {
+    "key": "dev/core/kafka/topics/data/___v1___data2___outoforder.json",
+    "flags": 0,
+    "value": "e30="
+  },
+  {
+    "key": "dev/core/kafka/topics/data/___v1___reportGenerator___reBlink___location.json",
+    "flags": 0,
+    "value": "e30="
+  },
+  {
+    "key": "dev/core/kafka/topics/data/___v1___data2___view___regen.json",
+    "flags": 0,
+    "value": "e30="
+  },
+  {
+    "key": "dev/core/kafka/topics/data/___v1___data2.json",
+    "flags": 0,
+    "value": "e30="
+  },
+  {
+    "key": "dev/core/kafka/topics/data/___data___view___cyclecount___$TENANT.json",
+    "flags": 0,
+    "value": "e30="
+  },
+  {
+    "key": "dev/core/kafka/topics/data/___data___view___location___$TENANT.json",
+    "flags": 0,
+    "value": "e30="
+  },
+  {
+    "key": "dev/core/kafka/topics/data/___data___view___fixture___$TENANT.json",
+    "flags": 0,
+    "value": "e30="
+  },
+  {
+    "key": "dev/core/kafka/topics/data/___data___view___itemlifecycle___$TENANT.json",
+    "flags": 0,
+    "value": "e30="
+  },
+  {
+    "key": "dev/core/kafka/topics/data/___data___view___product___$TENANT.json",
+    "flags": 0,
+    "value": "e30="
+  },
+  {
+    "key": "dev/core/kafka/topics/data/___data___view___setting___$TENANT.json",
+    "flags": 0,
+    "value": "e30="
   }
 ]

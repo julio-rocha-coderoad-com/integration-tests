@@ -48,6 +48,8 @@ docker compose up -d iot-rest-connector rpin
 docker compose up -d transformbridge ytem-transaction-tracker
 docker compose up -d mongoinjector reportgenerator
 docker compose up -d sysconfig-web
+docker compose stop services
+docker compose stop keycloak iam-config # we can do this later
 countdown 60 'Waiting for ingestion data consume'
 
 docker compose up -d minio
@@ -65,7 +67,10 @@ timeout -k 5 120 sudo tail -n 200 -f ./compose-data/sysconfig-web/tmp/output_SYS
 
 countdown 120 'Waiting Complementary task in tenant creation'
 
-ls ./compose-data/sysconfig-web/tmp/
+# starting services to install license
+docker compose up -d services
+
+
 curl --location 'http://localhost:8480/statemachine-api-configuration/rest/configuration/locations/transactions/681a275e50fa74419a765cdf' \
 --header 'Content-Type: application/json' \
 --header 'apikey: 7B4BCCDC' \
