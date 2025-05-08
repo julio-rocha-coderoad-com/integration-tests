@@ -98,7 +98,7 @@ while [ $attempt -le $max_attempts ]; do
   # Extract the response body (everything except the last line)
   body=$(echo "$response" | sed '$d')
 
-  parsed_status=$(echo "$body" | jq -r '.status')
+  parsed_status=$(echo "$body" | jq -r '.[0].status')
   jq_exit_status=$?
 
   # Check for HTTP errors first
@@ -108,7 +108,7 @@ while [ $attempt -le $max_attempts ]; do
     transaction_status="HTTP_ERROR" # Set status to indicate failure
     break # Exit loop on HTTP error
   elif [ $jq_exit_status -ne 0 ]; then
-      echo "ERROR: Failed to parse JSON body or find .status key with jq." >&2
+      echo "ERROR: Failed to parse JSON body or find .[0].status key with jq." >&2
       echo "Response Body: $body" >&2
       transaction_status="PARSE_ERROR" # Set status to indicate failure
       break # Exit loop on parsing error
