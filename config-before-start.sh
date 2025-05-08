@@ -60,8 +60,8 @@ import_mongo_file "creation_PERN.json" "tenant_creation_request"
 
 countdown 30 'Waiting for tenant creation initialization'
 echo 'Monitoring sysconfig-web logs...'
-timeout -k 5 60 docker compose exec -T sysconfig-web tail -200f /tmp/* || echo "No logs detected after 60 seconds timeout"
-timeout -k 5 60 docker compose exec -T sysconfig-web tail -200f /tmp/output_SYSCONFIG_PERN* || echo "No logs detected after 60 seconds timeout"
+timeout -k 5 60 docker compose exec -T sysconfig-web tail -n 200 -f /tmp/* || echo "No logs detected after 60 seconds timeout"
+timeout -k 5 60 docker compose exec -T sysconfig-web tail -n 200 -f /tmp/output_SYSCONFIG_PERN* || echo "No logs detected after 60 seconds timeout"
 
 countdown 120 'Waiting Complementary task in tenant creation'
 
