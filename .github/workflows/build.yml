@@ -69,4 +69,22 @@ jobs:
       - name: Stopping applications
         run: docker compose down
 
+      - name: Compress compose-data
+        run: sudo tar -cvf compose-data.tar compose-data
 
+
+      - name: Docker Build
+        run: |
+          export TAG=$(echo /${GITHUB_REF} | cut -d/ -f 4,5)
+          export DOCKER_TAG=${TAG/\//_}
+          docker build -f Dockerfile --tag gcr.io/mojix-registry/integration-tests:${DOCKER_TAG} .
+      - name: Docker Publish
+        run: |
+          export TAG=$(echo /${GITHUB_REF} | cut -d/ -f 4,5)
+          export DOCKER_TAG=${TAG/\//_}
+          if [ ${GITHUB_REPOSITORY_OWNER} == ${UPSTREAM} ]; then
+            docker push gcr.io/mojix-registry/integration-tests:${DOCKER_TAG}
+            echo "Image is: gcr.io/mojix-registry/integration-tests:${DOCKER_TAG}"
+          else
+            echo "This build will not generate a Docker Image"
+          fi
