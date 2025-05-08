@@ -49,15 +49,15 @@ docker compose up -d transformbridge ytem-transaction-tracker
 docker compose up -d mongoinjector reportgenerator
 countdown 120 'Waiting for ingestion data consume'
 
-docker compose up -d minio
-docker compose up -d ytem-locations sysconfig-web ytem-site-provisioner && countdown 60 "Waiting for ytem-locations sysconfig-web ytem-site-provisioner"
+docker compose up -d minio sysconfig-web
+docker compose up -d ytem-locations ytem-site-provisioner && countdown 60 "Waiting for ytem-locations sysconfig-web ytem-site-provisioner"
 
 echo 'Import tenant data to mongo'
 import_mongo_file "transactions_PERN.json" "transactions"
 import_mongo_file "transactions_detail_PERN.json" "transactiondetail"
 import_mongo_file "creation_PERN.json" "tenant_creation_request"
 
-countdown 10 'Waiting for tenant creation initialization'
+countdown 30 'Waiting for tenant creation initialization'
 echo 'Monitoring sysconfig-web logs...'
 timeout -k 5 60 docker compose exec -T sysconfig-web tail -200f /tmp/output_SYSCONFIG_PERN_* || echo "No logs detected after 60 seconds timeout"
 
