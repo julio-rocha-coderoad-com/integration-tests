@@ -9,6 +9,7 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     name: Unit, Integration and Acceptance Tests
+    timeout-minutes: 30
 
     steps:
       - name: Checkout

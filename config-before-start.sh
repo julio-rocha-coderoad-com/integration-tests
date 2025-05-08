@@ -76,7 +76,7 @@ curl --location 'http://localhost:8480/statemachine-api-configuration/rest/confi
 ### wait for sysconfig-web to finish
 # Set up a polling loop to check the status
 echo "Polling for transaction status (waiting for SUCCESS or ERROR)..."
-max_attempts=60
+max_attempts=180
 attempt=1
 # Initialize status to something other than the final states
 transaction_status="UNKNOWN" # Use a different variable name to avoid confusion with loop variable 'status'
