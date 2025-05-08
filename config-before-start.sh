@@ -61,7 +61,7 @@ import_mongo_file "creation_PERN.json" "tenant_creation_request"
 countdown 30 'Waiting for tenant creation initialization'
 echo 'Monitoring sysconfig-web logs...'
 countdown 5 'Additional wait single attempt'
-timeout -k 5 60 sudo tail -n 200 -f ./compose-data/sysconfig-web/tmp/output_SYSCONFIG_PERN* || echo "No logs detected after 60 seconds timeout"
+timeout -k 5 120 sudo tail -n 200 -f ./compose-data/sysconfig-web/tmp/output_SYSCONFIG_PERN* || echo "No logs detected after 60 seconds timeout"
 
 countdown 120 'Waiting Complementary task in tenant creation'
 
@@ -71,6 +71,57 @@ curl --location 'http://localhost:8480/statemachine-api-configuration/rest/confi
 --header 'apikey: 7B4BCCDC' \
 --header 'tenant: root' \
 --header 'accept-version: v2'
+
+
+### wait for sysconfig-web to finish
+# Set up a polling loop to check the status
+echo "Polling for transaction status (waiting for SUCCESS or ERROR)..."
+max_attempts=30
+attempt=1
+status="PENDING"
+status_code=200
+
+while [ $attempt -le $max_attempts ] && [ "$status" != "SUCCESS" ] && [ "$status" != "ERROR" ] && [ $status_code -eq 200 ]; do
+  echo "Attempt $attempt of $max_attempts..."
+
+  # Execute curl with silent mode and capture status code
+  response=$(curl -s --location 'http://localhost:8480/statemachine-api-configuration/rest/configuration/locations/transactions/681a275e50fa74419a765cdf' \
+    --header 'Content-Type: application/json' \
+    --header 'apikey: 7B4BCCDC' \
+    --header 'tenant: root' \
+    --header 'accept-version: v2' \
+    -w "\n%{http_code}")
+
+  # Extract status code from the last line
+  status_code=$(echo "$response" | tail -n1)
+  # Extract the response body (everything except the last line)
+  body=$(echo "$response" | sed '$d')
+
+  # Check if response contains SUCCESS or ERROR
+  if echo "$body" | grep -q -i "SUCCESS"; then
+    status="SUCCESS"
+    echo "Status is now SUCCESS!"
+    echo "$body"
+  elif echo "$body" | grep -q -i "ERROR"; then
+    status="ERROR"
+    echo "Status is now ERROR!"
+    echo "$body"
+  else
+    if [ "$status_code" -ne 200 ]; then
+      echo "Received non-200 status code: $status_code"
+      break
+    fi
+    echo "Status still PENDING. Waiting before next attempt..."
+    sleep 5
+  fi
+
+  attempt=$((attempt+1))
+done
+
+if [ "$status" = "PENDING" ] && [ $attempt -gt $max_attempts ]; then
+  echo "Maximum polling attempts reached. Last status: PENDING"
+fi
+### wait for sysconfig-web to finish
 
 docker compose logs
 echo 'Environment is ready, you can turn on the applications'
