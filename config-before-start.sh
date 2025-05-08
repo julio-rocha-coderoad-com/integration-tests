@@ -39,25 +39,27 @@ docker compose up -d consul zookeeper  mongo  && countdown 10 "Starting consul z
 docker compose up -d kafka  && countdown 40 "Waiting for kafka to start"
 docker compose up -d keycloak iam-config  && countdown 10 "Staring keycloak and iam-config"
 docker compose up -d services && countdown 180 "Starting Services & Migrating Data"
-echo 'Stopping services' && docker compose stop services
 
 echo 'Import Consul Configuration File for Project Under Test'
 docker cp consul_config.json consul:/consul_config.json
 docker compose exec -T consul /bin/consul kv import @consul_config.json
 
-docker compose up -d iot-rest-connector rpin transformbridge ytem-transaction-tracker mongoinjector reportgenerator
+docker compose up -d iot-rest-connector rpin
+docker compose up -d transformbridge ytem-transaction-tracker
+docker compose up -d mongoinjector reportgenerator
 countdown 120 'Waiting for ingestion data consume'
 
 docker compose up -d minio
 docker compose up -d ytem-locations sysconfig-web ytem-site-provisioner && countdown 60 "Waiting for ytem-locations sysconfig-web ytem-site-provisioner"
 
 echo 'Import tenant data to mongo'
-import_mongo_file "creation_PERN.json" "tenant_creation_request"
 import_mongo_file "transactions_PERN.json" "transactions"
 import_mongo_file "transactions_detail_PERN.json" "transactiondetail"
+import_mongo_file "creation_PERN.json" "tenant_creation_request"
 
+countdown 10 'Waiting for tenant creation initialization'
 echo 'Monitoring sysconfig-web logs...'
-timeout -k 5 60 docker compose exec -T sysconfig-web tail -f /tmp/output_SYSCONFIG_PERN_* || echo "No logs detected after 60 seconds timeout"
+timeout -k 5 60 docker compose exec -T sysconfig-web tail -200f /tmp/output_SYSCONFIG_PERN_* || echo "No logs detected after 60 seconds timeout"
 
 countdown 120 'Waiting Complementary task in tenant creation'
 
