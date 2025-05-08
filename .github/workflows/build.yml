@@ -88,3 +88,14 @@ jobs:
           else
             echo "This build will not generate a Docker Image"
           fi
+
+      - name: Upload Backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: compose-data-backup
+          path: compose-data.tar
+      - name: Upload Sql Backup
+        uses: actions/upload-artifact@v4
+        with:
+          name:  mysql-backup
+          path: mysql_backup.sql.tar
