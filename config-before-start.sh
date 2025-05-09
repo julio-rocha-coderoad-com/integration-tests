@@ -50,7 +50,7 @@ docker compose up -d mongoinjector reportgenerator
 docker compose up -d sysconfig-web
 #docker compose stop services
 #docker compose stop keycloak iam-config # we can do this later
-#docker compose stop ytem-transaction-tracker
+docker compose stop ytem-transaction-tracker
 ####countdown 60 'Waiting for ingestion data consume'
 
 docker compose up -d minio

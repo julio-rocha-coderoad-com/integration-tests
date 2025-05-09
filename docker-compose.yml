@@ -133,6 +133,7 @@ services:
     image: ${IAM_CONFIG}
     hostname: iam-config
     container_name: iam-config
+    mem_limit: 256m
     depends_on:
       - keycloak
       - consul
@@ -156,6 +157,7 @@ services:
     image: quay.io/keycloak/keycloak:12.0.2
     hostname: keycloak
     container_name: keycloak
+    mem_limit: 512m
     depends_on:
       - mysql
     command: -Dkeycloak.profile.feature.upload_scripts=enabled -Dkeycloak.profile.feature.token_exchange=enabled -Dkeycloak.profile=preview
@@ -226,6 +228,7 @@ services:
   ytem-transaction-tracker:
     hostname: ytem-transaction-tracker
     container_name: ytem-transaction-tracker
+    mem_limit: 256m
     depends_on:
       - consul
       - kafka
