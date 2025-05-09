@@ -272,6 +272,8 @@ services:
     mem_reservation: 1536m
     mem_limit: 1536m
     environment:
+      MEM_XMS: 1g
+      MEM_XMX: 1g
       VIZIX_PRE_MIGRATION: "false"
       VIZIX_SYSCONFIG: "true"
       VIZIX_SYSCONFIG_CREATE_TENANT: "true"
