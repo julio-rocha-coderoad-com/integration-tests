@@ -125,7 +125,7 @@ services:
       VIZIX_REPORT_TIMEOUT: 1200
       #iam
       VIZIX_IAM_CONFIGURATION_URL: iam-config:8080/iam-config
-      VIZIX_IAM_CONFIGURATION_TIMEOUT: 10
+      VIZIX_IAM_CONFIGURATION_TIMEOUT: 60
       VIZIX_IAM_JWT_PUBLIC_KEY_URL: http://iam-config:8080/iam-config/config/auth/keys
       VIZIX_IAM_JWT_ISSUER: none
 
@@ -368,3 +368,47 @@ services:
       - ${VIZIX_DATA_PATH}/minio:/data
     ports:
       - "9500:9000"
+
+  ignite:
+    hostname: ignite
+    container_name: ignite
+    mem_limit: 512m
+    restart: always
+    image: ${IGNITE}
+    environment:
+      - IGNITE_WORK_DIR=/persistence
+      - OPTION_LIBS=ignite-rest-http
+      - CONFIG_URI=https://raw.githubusercontent.com/apache/ignite/master/examples/config/persistentstore/example-persistent-store.xml
+    volumes:
+      - ${VIZIX_DATA_PATH}/ignite:/persistence
+    ports:
+      - 47500:47500
+      - 8880:8080
+
+  cache-service:
+    depends_on:
+      - consul
+      - ignite
+    hostname: cache-service
+    container_name: cache-service
+    mem_limit: 512m
+    restart: always
+    image: ${CACHE_SERVICE}
+    environment:
+      - CONFIGSOURCE_CONSUL_HOST=consul
+    ports:
+      - 8280:8080
+
+  ytem-utils:
+    depends_on:
+      - consul
+    hostname: ytem-utils
+    container_name: ytem-utils
+    mem_limit: 512m
+    restart: always
+    image: ${YTEM_UTILS}
+    environment:
+      - QUARKUS_CONSUL_CONFIG_AGENT_HOST_PORT=consul:8500
+      - QUARKUS_LOG_LEVEL=INFO
+    ports:
+      - 8780:8080

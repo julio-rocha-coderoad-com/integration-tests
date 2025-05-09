@@ -5,6 +5,7 @@ if [[ $# -eq 0 ]] ; then
 fi
 netname=$1
 export LOCAL_IP=$(ip addr show $netname  | awk '$1 == "inet" { print $2 }' | cut -d/ -f1)
+#export LOCAL_IP=192.168.31.22
 
 sed -i "/INTERNAL_IP/c INTERNAL_IP=$LOCAL_IP" .env
 sed -i "/KAFKA_ADDRESS/c KAFKA_ADDRESS=$LOCAL_IP" .env
@@ -30,15 +31,29 @@ import_mongo_file() {
         --collection $collection --file /tmp/$file --mode upsert
 }
 
+# Set default value for VIZIX_DATA_PATH if not already defined
+if [ -z "${VIZIX_DATA_PATH}" ]; then
+  export VIZIX_DATA_PATH="./compose-data"
+  echo "VIZIX_DATA_PATH was not defined, setting default value: ${VIZIX_DATA_PATH}"
+fi
 
-echo 'Fix consul permissions'
-mkdir -p ./compose-data/consul
-sudo chown -R 100:100 ./compose-data/consul
+echo "Current path to persist data: ${VIZIX_DATA_PATH}"
+
+if [ "$(uname)" = "Linux" ]; then
+  echo "Linux detected, configuring consul permissions..."
+  echo 'Fix consul permissions'
+  mkdir -p ${VIZIX_DATA_PATH}/consul
+  sudo chown -R 100:100 ${VIZIX_DATA_PATH}/consul
+else
+  echo "Non-Linux environment detected, skipping consul permission setup"
+fi
+####mkdir -p ${VIZIX_DATA_PATH}/consul
+####sudo chown -R 100:100 ${VIZIX_DATA_PATH}/consul
 
 docker compose up -d consul zookeeper  mongo  && countdown 10 "Starting consul zookeeper mongo and kafka"
 docker compose up -d kafka  && countdown 40 "Waiting for kafka to start"
-docker compose up -d keycloak iam-config  && countdown 10 "Staring keycloak and iam-config"
-docker compose up -d services && countdown 180 "Starting Services & Migrating Data"
+docker compose up -d keycloak iam-config  && countdown 40 "Staring keycloak and iam-config"
+docker compose up -d services && countdown 120 "Starting Services & Migrating Data"
 
 echo 'Import Consul Configuration File for Project Under Test'
 docker cp consul_config.json consul:/consul_config.json
@@ -49,8 +64,8 @@ docker compose up -d transformbridge ytem-transaction-tracker
 docker compose up -d mongoinjector reportgenerator
 docker compose up -d sysconfig-web
 #docker compose stop services
-docker compose stop keycloak iam-config # we can do this later
-docker compose stop ytem-transaction-tracker
+####docker compose stop keycloak iam-config # we can do this later
+####docker compose stop ytem-transaction-tracker
 ####countdown 60 'Waiting for ingestion data consume'
 
 docker compose up -d minio
@@ -63,8 +78,8 @@ import_mongo_file "creation_PERN.json" "tenant_creation_request"
 
 ####countdown 30 'Waiting for tenant creation initialization'
 ####echo 'Monitoring sysconfig-web logs...'
-countdown 5 'Additional wait single attempt'
-timeout -k 5 30 sudo tail -n 200 -f ./compose-data/sysconfig-web/tmp/output_SYSCONFIG_PERN* || echo "No logs detected after 60 seconds timeout"
+####countdown 5 'Additional wait single attempt'
+####timeout -k 5 30 sudo tail -n 200 -f ${VIZIX_DATA_PATH}/sysconfig-web/tmp/output_SYSCONFIG_PERN* || echo "No logs detected after 60 seconds timeout"
 
 # starting services to install license
 ####docker compose up -d services
@@ -74,7 +89,7 @@ timeout -k 5 30 sudo tail -n 200 -f ./compose-data/sysconfig-web/tmp/output_SYSC
 ### wait for sysconfig-web to finish
 # Set up a polling loop to check the status
 echo "Polling for transaction status (waiting for SUCCESS or ERROR)..."
-max_attempts=30
+max_attempts=60
 attempt=1
 # Initialize status to something other than the final states
 transaction_status="UNKNOWN" # Use a different variable name to avoid confusion with loop variable 'status'
@@ -130,7 +145,7 @@ while [ $attempt -le $max_attempts ]; do
   fi
 
   attempt=$((attempt+1))
-  sudo tail -n 10 ./compose-data/sysconfig-web/tmp/output_SYSCONFIG_PERN* || echo "No logs detected after 60 seconds timeout"
+  sudo tail -n 10 ${VIZIX_DATA_PATH}/sysconfig-web/tmp/output_SYSCONFIG_PERN* || echo "No logs detected after 60 seconds timeout"
   # if attempt is equals to 10 we proceed to start services
 #  if [ $attempt -eq 11 ]; then
 #    echo "Attempting to start services after 11 attempts..."
@@ -164,7 +179,24 @@ docker compose logs sysconfig-web
 docker compose logs ytem-site-provisioner
 docker compose logs minio
 docker compose logs services
-sudo cat ./compose-data/sysconfig-web/tmp/output_SYSCONFIG_PERN* || echo "No logs detected after 60 seconds timeout"
+sudo cat ${VIZIX_DATA_PATH}/sysconfig-web/tmp/output_SYSCONFIG_PERN* || echo "No logs detected after 60 seconds timeout"
+
+
+# Start reload caches
+docker compose stop sysconfig-web services # we won't need this on next steps
+docker compose up -d ignite && countdown 30 "Waiting for ignite start"
+docker compose up -d cache-service ytem-utils && countdown 30 "Waiting for cache-service ytem-utils start"
+
+
+docker compose exec -T ytem-utils curl --header 'apikey: 7B4BCCDC' --header 'tenant: root' -v -X GET http://localhost:8080/configurations/event-caches/reload
+docker compose exec -T ytem-utils curl --header 'apikey: 7B4BCCDC' --header 'tenant: root' -v -X GET http://localhost:8080/configurations/setting-caches/reload
+docker compose exec -T ytem-utils curl --header 'apikey: 7B4BCCDC' --header 'tenant: root' -v -X GET http://localhost:8080/configurations/product-sku-caches/reload
+docker compose exec -T ytem-utils curl --header 'apikey: 7B4BCCDC' --header 'tenant: root' -v -X GET http://localhost:8080/configurations/inventory-caches/reload/fixtures
+docker compose exec -T ytem-utils curl --header 'apikey: 7B4BCCDC' --header 'tenant: root' -v -X GET http://localhost:8080/configurations/inventory-caches/reload/attributes
+docker compose exec -T ytem-utils curl --header 'apikey: 7B4BCCDC' --header 'tenant: root' -v -X GET http://localhost:8080/configurations/inventory-caches/reload/rules
+docker compose exec -T ytem-utils curl --header 'apikey: 7B4BCCDC' --header 'tenant: root' -v -X GET http://localhost:8080/configurations/inventory-caches/reload/siteCodes
+# End reload caches
+
 echo 'Environment is ready, you can turn on the applications'
 
 echo 'Creating MySQL database backup...'
