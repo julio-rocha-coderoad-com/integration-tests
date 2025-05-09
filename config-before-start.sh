@@ -135,6 +135,7 @@ while [ $attempt -le $max_attempts ]; do
     echo "Attempting to start services after 10 attempts..."
     docker compose up -d services
   fi
+  docker stats --no-stream
 done
 
 echo "Polling finished."

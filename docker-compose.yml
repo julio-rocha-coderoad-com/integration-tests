@@ -90,11 +90,10 @@ services:
       - mysql
     hostname: services
     container_name: services
-    mem_reservation: 2g
     image: ${SERVICES}
     environment:
       MEM_XMS: 1g
-      MEM_XMX: 2g
+      MEM_XMX: 1g
       VIZIX_MONGO_PRIMARY: mongo:27017
       VIZIX_MONGO_DB: viz_root
       VIZIX_MQTT_HOST: mosquitto
