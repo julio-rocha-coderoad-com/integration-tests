@@ -269,6 +269,8 @@ services:
     hostname: sysconfig-web
     container_name: sysconfig-web
     image: ${SYSCONFIG_WEB}
+    mem_reservation: 1536m
+    mem_limit: 1536m
     environment:
       VIZIX_PRE_MIGRATION: "false"
       VIZIX_SYSCONFIG: "true"
