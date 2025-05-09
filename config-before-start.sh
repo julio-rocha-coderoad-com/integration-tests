@@ -73,7 +73,7 @@ import_mongo_file "creation_PERN.json" "tenant_creation_request"
 ### wait for sysconfig-web to finish
 # Set up a polling loop to check the status
 echo "Polling for transaction status (waiting for SUCCESS or ERROR)..."
-max_attempts=180
+max_attempts=30
 attempt=1
 # Initialize status to something other than the final states
 transaction_status="UNKNOWN" # Use a different variable name to avoid confusion with loop variable 'status'
@@ -157,7 +157,11 @@ else
 fi
 ### wait for sysconfig-web to finish
 
-docker compose logs
+docker compose logs ytem-locations
+docker compose logs sysconfig-web
+docker compose logs ytem-site-provisioner
+docker compose logs services
+sudo cat ./compose-data/sysconfig-web/tmp/output_SYSCONFIG_PERN* || echo "No logs detected after 60 seconds timeout"
 echo 'Environment is ready, you can turn on the applications'
 
 echo 'Creating MySQL database backup...'
