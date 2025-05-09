@@ -162,6 +162,7 @@ fi
 docker compose logs ytem-locations
 docker compose logs sysconfig-web
 docker compose logs ytem-site-provisioner
+docker compose logs minio
 docker compose logs services
 sudo cat ./compose-data/sysconfig-web/tmp/output_SYSCONFIG_PERN* || echo "No logs detected after 60 seconds timeout"
 echo 'Environment is ready, you can turn on the applications'
