@@ -347,6 +347,7 @@ services:
     environment:
       - QUARKUS_CONSUL_CONFIG_AGENT_HOST_PORT=consul:8500
       - QUARKUS_LOG_LEVEL=INFO
+      - QUARKUS_MINIO_SECURE=false
     ports:
       - 8380:8080
 
