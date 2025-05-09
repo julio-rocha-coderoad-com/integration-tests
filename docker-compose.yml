@@ -90,7 +90,7 @@ services:
       - mysql
     hostname: services
     container_name: services
-    mem_reservation: 4g
+    mem_reservation: 2g
     image: ${SERVICES}
     environment:
       MEM_XMS: 1g
@@ -262,7 +262,6 @@ services:
   sysconfig-web:
     hostname: sysconfig-web
     container_name: sysconfig-web
-    mem_reservation: 2g
     image: ${SYSCONFIG_WEB}
     environment:
       VIZIX_PRE_MIGRATION: "false"
