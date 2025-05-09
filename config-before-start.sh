@@ -48,7 +48,7 @@ docker compose up -d iot-rest-connector rpin
 docker compose up -d transformbridge ytem-transaction-tracker
 docker compose up -d mongoinjector reportgenerator
 docker compose up -d sysconfig-web
-docker compose stop services
+#docker compose stop services
 docker compose stop keycloak iam-config # we can do this later
 docker compose stop ytem-transaction-tracker
 ####countdown 60 'Waiting for ingestion data consume'
@@ -132,10 +132,10 @@ while [ $attempt -le $max_attempts ]; do
   attempt=$((attempt+1))
   sudo tail -n 10 ./compose-data/sysconfig-web/tmp/output_SYSCONFIG_PERN* || echo "No logs detected after 60 seconds timeout"
   # if attempt is equals to 10 we proceed to start services
-  if [ $attempt -eq 11 ]; then
-    echo "Attempting to start services after 11 attempts..."
-    docker compose up -d services
-  fi
+#  if [ $attempt -eq 11 ]; then
+#    echo "Attempting to start services after 11 attempts..."
+#    docker compose up -d services
+#  fi
   docker stats --no-stream
 done
 
