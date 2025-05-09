@@ -4,6 +4,7 @@ services:
     hostname: consul
     container_name: consul
     image: ${CONSUL}
+    mem_limit: 256m
     command: "agent -server -ui -node=server-1 -bootstrap-expect=1 -client=0.0.0.0"
     ports:
       - 8500:8500
@@ -58,6 +59,7 @@ services:
     image: ${ZOOKEEPER}
     hostname: zookeeper
     container_name: zookeeper
+    mem_limit: 256m
     ports:
       - 2181:2181
     volumes:
@@ -172,6 +174,7 @@ services:
   iot-rest-connector:
     hostname: iot-rest-connector
     container_name: iot-rest-connector
+    mem_limit: 512m
     depends_on:
       - consul
       - mongo
@@ -190,6 +193,7 @@ services:
     image: ${BRIDGES}
     hostname: rpin
     container_name: rpin
+    mem_limit: 512m
     environment:
       VIZIX_BRIDGE_TYPE: rulesprocessor
       VIZIX_KAFKA_CODE: RULESPROCESSOR
@@ -206,6 +210,7 @@ services:
     hostname: transformbridge
     container_name: transformbridge
     image: ${BRIDGES}
+    mem_limit: 512m
     depends_on:
       - kafka
     environment:
@@ -233,6 +238,7 @@ services:
     hostname: mongoinjector
     container_name: mongoinjector
     image: ${BRIDGES}
+    mem_limit: 512m
     depends_on:
       - mongo
       - kafka
@@ -248,6 +254,7 @@ services:
     hostname: reportgenerator
     container_name: reportgenerator
     image: ${REPORTGENERATOR}
+    mem_limit: 512m
     environment:
       CONSUL_HTTP_ADDR: consul:8500
       CONSUL_PREFIX: dev
@@ -318,8 +325,7 @@ services:
     container_name: ytem-locations
     image: ${YTEM_LOCATIONS}
     restart: always
-    mem_reservation: 256m
-    mem_limit: 512m
+    mem_limit: 256m
     depends_on:
       - consul
     environment:
@@ -333,8 +339,7 @@ services:
     container_name: ytem-site-provisioner
     image: ${YTEM_SITE_PROVISIONER}
     restart: always
-    mem_reservation: 256m
-    mem_limit: 512m
+    mem_limit: 256m
     depends_on:
       - consul
     environment:
